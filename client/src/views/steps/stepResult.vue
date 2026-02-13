@@ -38,12 +38,38 @@ export default {
   },
   methods: {
     async saveResult() {
-      alert("clicked");
+      try {
+        console.log("saveResult clicked");
 
-      if (window.AndroidBridge) {
-        alert("bridge exists");
-      } else {
-        alert("bridge missing");
+        const canvas = await html2canvas(this.$refs.result, {
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: "#ffffff",
+          scale: 2,
+        });
+
+        const base64 = canvas.toDataURL("image/png");
+
+        console.log("Base64 length:", base64.length);
+
+        // 🔥 Android WebView 환경
+        if (window.AndroidBridge && window.AndroidBridge.saveImage) {
+          console.log("Sending to AndroidBridge...");
+          window.AndroidBridge.saveImage(base64);
+        }
+        // 🔥 일반 브라우저
+        else {
+          console.log("Browser download mode...");
+          const a = document.createElement("a");
+          a.href = base64;
+          a.download = "Image.png";
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }
+      } catch (error) {
+        console.error("saveResult error:", error);
+        alert("저장 중 오류가 발생했습니다.");
       }
     },
   },
