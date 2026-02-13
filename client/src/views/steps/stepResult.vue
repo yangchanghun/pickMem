@@ -38,24 +38,12 @@ export default {
   },
   methods: {
     async saveResult() {
-      const canvas = await html2canvas(this.$refs.result, {
-        backgroundColor: "#ffffff",
-      });
+      alert("clicked");
 
-      const base64 = canvas.toDataURL("image/png");
-
-      // 🔥 Android 앱 안에서 실행 중이면
-      if (window.AndroidBridge && window.AndroidBridge.saveImage) {
-        window.AndroidBridge.saveImage(base64);
-      }
-      // 🔥 일반 브라우저일 경우
-      else {
-        const a = document.createElement("a");
-        a.href = base64;
-        a.download = "Image.png";
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+      if (window.AndroidBridge) {
+        alert("bridge exists");
+      } else {
+        alert("bridge missing");
       }
     },
   },
