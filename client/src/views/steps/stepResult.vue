@@ -40,15 +40,7 @@ export default {
     async saveResult() {
       try {
         console.log("saveResult clicked");
-        alert("clicked");
 
-        alert("bridge type: " + typeof window.AndroidBridge);
-
-        if (window.AndroidBridge) {
-          alert("bridge exists");
-        } else {
-          alert("bridge missing");
-        }
         const canvas = await html2canvas(this.$refs.result, {
           useCORS: true,
           allowTaint: true,
