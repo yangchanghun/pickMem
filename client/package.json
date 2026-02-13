@@ -2,12 +2,9 @@
   "name": "client",
   "version": "0.1.0",
   "private": true,
-  "engines": {
-    "node": "18.x"
-  },
   "scripts": {
     "serve": "vue-cli-service serve",
-    "build": "vue-cli-service build"
+    "build": "NODE_OPTIONS=--openssl-legacy-provider vue-cli-service build"
   },
   "dependencies": {
     "core-js": "^3.6.5",
