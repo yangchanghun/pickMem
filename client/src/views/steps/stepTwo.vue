@@ -45,7 +45,9 @@
             <div v-if="countdown > 0" class="countdown-overlay">
               {{ countdown }}
             </div>
+            <div v-if="flash" class="flash"></div>
           </div>
+          <audio ref="shutterSound" src="/sounds/shutter.mp3"></audio>
           <div v-if="!isShotPhoto" class="col-custom" style="width: 100px">
             <div class="w-100">
               <div
@@ -284,6 +286,7 @@ export default {
       countdownTimer: null,
       countdown: 0,
       isAutoShooting: false,
+      flash: false,
     };
   },
 
@@ -382,6 +385,16 @@ export default {
         context.drawImage(this.$refs.camera, 0, 0, 600, 450);
       } else {
         context.drawImage(this.$refs.camera, 0, 0, 450, 600);
+      }
+      this.flash = true;
+      setTimeout(() => {
+        this.flash = false;
+      }, 150);
+
+      /* 🔊 셔터 사운드 */
+      if (this.$refs.shutterSound) {
+        this.$refs.shutterSound.currentTime = 0;
+        this.$refs.shutterSound.play();
       }
 
       const image = this.$refs.canvas
@@ -569,6 +582,30 @@ video {
   opacity: 0.8;
   z-index: 9;
   animation: flashAnim 0.15s ease;
+}
+.camera-wrapper {
+  position: relative;
+}
+
+.flash {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 600px;
+  height: 450px;
+  background: white;
+  opacity: 0.9;
+  animation: flashAnim 0.15s ease;
+  pointer-events: none;
+}
+
+@keyframes flashAnim {
+  0% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 @keyframes pop {
