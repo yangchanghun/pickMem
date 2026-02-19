@@ -12,20 +12,16 @@
         class="d-flex justify-content-center align-items-center"
       >
         <div v-if="rows <= columns" class="camera-horizontal camera-frame">
-          <div
-            class="col-custom h-100 text-center d-flex align-items-center justify-content-center"
-            style="width: 50px; color: #fff; font-size: 20px"
-          >
-            <div v-if="isPhotoTaken">
-              마<br />음<br />에<br /><br />들<br />면<br /><br />다<br />음<br />으<br />로<br />!
+          <div class="side-text">
+            <div v-if="isPhotoTaken" class="vertical-text">
+              마음에 들면 다음으로!
             </div>
-            <div v-else-if="getImageLen < 6">
-              {{ 6 - getImageLen
-              }}<br />장<br /><br />남<br />았<br />어<br />요<br />!
+
+            <div v-else-if="getImageLen < 6" class="vertical-text">
+              {{ 6 - getImageLen }}장 남았어요!
             </div>
-            <div v-else>
-              이<br />제<br /><br />꾸<br />미<br />러<br /><br />가<br />볼<br />까<br />요<br />?
-            </div>
+
+            <div v-else class="vertical-text">이제 꾸미러 가볼까요?</div>
           </div>
           <div class="col-custom">
             <video
@@ -566,6 +562,21 @@ video {
   font-weight: bold;
   z-index: 11;
   animation: snapAnim 0.7s ease;
+}
+.side-text {
+  width: 50px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 20px;
+}
+
+.vertical-text {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  text-align: center;
 }
 
 .camera-wrapper {
