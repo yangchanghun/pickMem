@@ -1,23 +1,24 @@
 <template>
   <div id="app">
-    <router-view/>
+    <router-view />
   </div>
 </template>
 
 <script>
-import { defaultMeta } from '@/utils/meta'
+import { defaultMeta } from "@/utils/meta";
 
 export default {
   metaInfo: {
-    title: 'Pick The Moment',
+    title: "Pick The Moment",
     meta: defaultMeta,
-  }
-}
+  },
+};
 </script>
 
 <style lang="scss">
-html, body, #app {
+html,
+body,
+#app {
   height: 100%;
 }
-
 </style>
