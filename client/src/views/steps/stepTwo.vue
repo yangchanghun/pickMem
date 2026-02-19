@@ -132,13 +132,11 @@
               width="450"
               height="600"
             ></canvas>
-                        <div v-if="countdown > 0" class="countdown-overlay">
+            <div v-if="countdown > 0" class="countdown-overlay">
               {{ countdown }}
             </div>
             <div v-if="flash" class="flash"></div>
-          </div>
-          <audio ref="shutterSound" src="/sounds/shutter.mp3"></audio>
-          </div>
+            <audio ref="shutterSound" src="/sounds/shutter.mp3"></audio>
           <div v-if="!isShotPhoto">
             <div class="d-flex justify-content-center align-items-center">
               <div class="row m-0 p-0 w-100" style="height: 100px">
