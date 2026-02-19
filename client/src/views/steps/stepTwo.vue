@@ -427,6 +427,7 @@ export default {
       this.$store.commit("setNext", false);
       this.$store.commit("setImages", {});
       this.images = {};
+      this.createCameraElement();
     },
 
     removeImg(target) {
@@ -496,16 +497,9 @@ export default {
   background-color: black;
 }
 
-.camera-horizontal {
-  width: 750px;
-  height: 450px;
-  box-shadow: 1px 1px 3px black;
-}
-
+.camera-horizontal,
 .camera-vertical {
-  width: 450px;
-  height: 750px;
-  box-shadow: 1px 1px 3px black;
+  position: relative;
 }
 
 .takePic {
@@ -574,15 +568,6 @@ video {
   animation: snapAnim 0.7s ease;
 }
 
-.flash {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  background: white;
-  opacity: 0.8;
-  z-index: 9;
-  animation: flashAnim 0.15s ease;
-}
 .camera-wrapper {
   position: relative;
 }
@@ -591,12 +576,12 @@ video {
   position: absolute;
   top: 0;
   left: 0;
-  width: 600px;
-  height: 450px;
+  width: 100%;
+  height: 100%;
   background: white;
   opacity: 0.9;
-  animation: flashAnim 0.15s ease;
   pointer-events: none;
+  animation: flashAnim 0.15s ease;
 }
 
 @keyframes flashAnim {
