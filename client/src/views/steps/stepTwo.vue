@@ -132,6 +132,12 @@
               width="450"
               height="600"
             ></canvas>
+                        <div v-if="countdown > 0" class="countdown-overlay">
+              {{ countdown }}
+            </div>
+            <div v-if="flash" class="flash"></div>
+          </div>
+          <audio ref="shutterSound" src="/sounds/shutter.mp3"></audio>
           </div>
           <div v-if="!isShotPhoto">
             <div class="d-flex justify-content-center align-items-center">
@@ -160,7 +166,7 @@
                           }
                         : {
                             click: () => {
-                              takePhoto();
+                              this.startAutoShot();
                             },
                           }
                     "
@@ -481,6 +487,7 @@ export default {
 <style lang="scss" scoped>
 .col-custom {
   float: left;
+  position: relative; // 👈 이거 추가
 
   &-50 {
     width: 50px;
@@ -601,15 +608,6 @@ video {
   100% {
     transform: translate(-50%, -50%) scale(1);
     opacity: 1;
-  }
-}
-
-@keyframes flashAnim {
-  0% {
-    opacity: 0.8;
-  }
-  100% {
-    opacity: 0;
   }
 }
 
