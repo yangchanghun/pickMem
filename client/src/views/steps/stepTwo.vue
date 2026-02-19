@@ -77,7 +77,7 @@
                       : {
                           click: () => {
                             if (!this.isAutoShooting) {
-                              this.startCountdown();
+                              this.startAutoShot();
                             }
                           },
                         }
@@ -281,7 +281,6 @@ export default {
       isShotPhoto: false,
       isLoading: false,
 
-      autoInterval: null,
       countdownTimer: null,
       countdown: 0,
       isAutoShooting: false,
@@ -350,17 +349,28 @@ export default {
     /* ================= 자동촬영 ================= */
 
     startAutoShot() {
+      if (this.getImageLen >= 6) {
+        this.stopAllShooting();
+        return;
+      }
+
       this.isAutoShooting = true;
+      this.countdown = 5;
 
-      this.captureAndSave();
+      this.countdownTimer = setInterval(() => {
+        this.countdown--;
 
-      this.autoInterval = setInterval(() => {
-        if (this.getImageLen >= 6) {
-          this.stopAllShooting();
-          return;
+        if (this.countdown <= 0) {
+          clearInterval(this.countdownTimer);
+          this.countdown = 0;
+
+          this.captureAndSave();
+
+          setTimeout(() => {
+            this.startAutoShot(); // 다음 장
+          }, 1000);
         }
-        this.captureAndSave();
-      }, 5000);
+      }, 1000);
     },
 
     captureAndSave() {
@@ -384,11 +394,6 @@ export default {
 
     stopAllShooting() {
       this.isAutoShooting = false;
-
-      if (this.autoInterval) {
-        clearInterval(this.autoInterval);
-        this.autoInterval = null;
-      }
 
       if (this.countdownTimer) {
         clearInterval(this.countdownTimer);
