@@ -281,12 +281,9 @@ export default {
       isShotPhoto: false,
       isLoading: false,
 
-      // 자동촬영 관련
       autoInterval: null,
       countdownTimer: null,
       countdown: 0,
-      showSnap: false,
-      flash: false,
       isAutoShooting: false,
     };
   },
@@ -297,8 +294,7 @@ export default {
     this.columns = table.split("x")[1];
     this.images = this.$store.getters.getImages;
 
-    if (this.getImageLen == 6) this.$store.commit("setNext", true);
-    else this.$store.commit("setNext", false);
+    this.$store.commit("setNext", this.getImageLen == 6);
 
     this.createCameraElement();
   },
@@ -313,17 +309,18 @@ export default {
     createCameraElement() {
       this.isLoading = true;
 
-      const constraints = {
-        audio: false,
-        video: true,
-      };
-
       navigator.mediaDevices
-        .getUserMedia(constraints)
+        .getUserMedia({ video: true, audio: false })
         .then((stream) => {
           this.isLoading = false;
           this.canPhoto = true;
-          this.$refs.camera.srcObject = stream;
+
+          // 🔥 DOM 렌더 후 ref 접근
+          this.$nextTick(() => {
+            if (this.$refs.camera) {
+              this.$refs.camera.srcObject = stream;
+            }
+          });
         })
         .catch((error) => {
           console.error(error);
@@ -355,7 +352,6 @@ export default {
     startAutoShot() {
       this.isAutoShooting = true;
 
-      // 첫 촬영
       this.captureAndSave();
 
       this.autoInterval = setInterval(() => {
@@ -368,6 +364,8 @@ export default {
     },
 
     captureAndSave() {
+      if (!this.$refs.canvas || !this.$refs.camera) return;
+
       const context = this.$refs.canvas.getContext("2d");
 
       if (this.rows <= this.columns) {
@@ -376,23 +374,11 @@ export default {
         context.drawImage(this.$refs.camera, 0, 0, 450, 600);
       }
 
-      // 플래시 효과
-      this.flash = true;
-      setTimeout(() => {
-        this.flash = false;
-      }, 150);
-
-      // 찰칵 효과
-      this.showSnap = true;
-      setTimeout(() => {
-        this.showSnap = false;
-      }, 700);
-
       const image = this.$refs.canvas
         .toDataURL("image/jpeg")
         .replace("image/jpeg", "image/octet-stream");
 
-      let id = new Date().getTime();
+      let id = Date.now();
       this.$set(this.images, id, image);
     },
 
@@ -412,13 +398,10 @@ export default {
       this.stopCameraStream();
     },
 
-    /* ================= 기존 기능 ================= */
-
     stopCameraStream() {
       if (!this.$refs.camera?.srcObject) return;
 
-      let tracks = this.$refs.camera.srcObject.getTracks();
-      tracks.forEach((track) => track.stop());
+      this.$refs.camera.srcObject.getTracks().forEach((track) => track.stop());
     },
 
     initImage() {
@@ -444,7 +427,7 @@ export default {
 
       for await (let file of files) {
         if (this.getImageLen >= 6) break;
-        let id = new Date().getTime();
+        let id = Date.now();
         this.$set(this.images, id, await this.readFile(file));
       }
     },
@@ -468,9 +451,7 @@ export default {
     images: {
       deep: true,
       handler() {
-        if (this.getImageLen == 6) {
-          this.$store.commit("setNext", true);
-        }
+        this.$store.commit("setNext", this.getImageLen == 6);
         this.$store.commit("setImages", this.images);
       },
     },
