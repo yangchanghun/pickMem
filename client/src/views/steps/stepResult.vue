@@ -39,60 +39,7 @@ export default {
   },
   methods: {
     async printResult() {
-      try {
-        const canvas = await html2canvas(this.$refs.result, {
-          useCORS: true,
-          allowTaint: true,
-          backgroundColor: "#ffffff",
-          scale: 2,
-        });
-
-        const base64 = canvas.toDataURL("image/png");
-
-        // 새 창 열기
-        const printWindow = window.open("", "_blank");
-
-        printWindow.document.write(`
-      <html>
-        <head>
-          <title>Print</title>
-          <style>
-            body {
-              margin: 0;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100vh;
-              background: white;
-            }
-            img {
-              max-width: 100%;
-              max-height: 100%;
-            }
-            @media print {
-              body {
-                margin: 0;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <img src="${base64}" />
-          <script>
-            window.onload = function() {
-              window.print();
-              window.close();
-            };
-          <\/script>
-        </body>
-      </html>
-    `);
-
-        printWindow.document.close();
-      } catch (err) {
-        console.error(err);
-        alert("인쇄 중 오류 발생");
-      }
+      window.print();
     },
 
     async saveResult() {
@@ -175,6 +122,40 @@ export default {
   &-4-1 {
     height: 180px;
     width: 560px;
+  }
+}
+/* 인쇄 시 사진(outter-frame)만 보이게 */
+@media print {
+  /* 페이지 여백 제거 */
+  @page {
+    margin: 0;
+  }
+
+  /* 기본 여백 제거 */
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* 전부 숨김 */
+  body * {
+    display: none !important;
+  }
+
+  /* 사진 영역만 보이게 */
+  .outter-frame,
+  .outter-frame * {
+    display: block !important;
+  }
+
+  /* 사진을 페이지 중앙에 배치 */
+  .outter-frame {
+    position: fixed;
+    inset: 0;
+    margin: auto;
+    width: auto;
+    height: auto;
   }
 }
 </style>
