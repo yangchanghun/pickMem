@@ -2,6 +2,7 @@
   <div class="step-result">
     <div class="text-center mb-3">
       <button class="btn-custom mr-3" @click="saveResult">저 장 하 기</button>
+      <button class="btn-custom mr-3" @click="printClick">인 쇄 하 기</button>
       <button class="btn-custom" @click="$router.push('/')">다 시 하 기</button>
     </div>
     <div class="mb-5">
@@ -37,6 +38,17 @@ export default {
     this.columns = table.columns;
   },
   methods: {
+    async printClick() {
+      try {
+        console.log("printClick clicked");
+        await this.$nextTick(); // DOM 업데이트 대기
+        window.print();
+      } catch (error) {
+        console.error("printClick error:", error);
+        alert("인쇄 중 오류가 발생했습니다.");
+      }
+    },
+
     async saveResult() {
       try {
         console.log("saveResult clicked");
