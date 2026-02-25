@@ -34,6 +34,7 @@
               width="600"
               height="450"
               autoplay
+              :class="{mirror:isMirror}"
             ></video>
             <canvas
               v-show="isPhotoTaken"
@@ -54,6 +55,11 @@
                 class="d-flex justify-content-center align-items-center"
                 style="height: 75px"
               >
+                <i
+                  class="mdi mdi-swap-horizontal"
+                  style="font-size: 28px; color: #fff; cursor: pointer;"
+                  @click="isMirror = !isMirror"
+                ></i>
                 <i
                   v-if="isPhotoTaken"
                   class="mdi mdi-trash-can"
@@ -124,6 +130,7 @@
               width="450"
               height="600"
               autoplay
+              :class="{ mirror: isMirror }"
             ></video>
             <canvas
               v-show="isPhotoTaken"
@@ -185,6 +192,11 @@
                 <div
                   class="col-2 d-flex align-items-center justify-content-center"
                 >
+                 <i
+                  class="mdi mdi-swap-horizontal"
+                  style="font-size: 28px; color: #fff; cursor: pointer;"
+                  @click="isMirror = !isMirror"
+                ></i>
                   <i
                     v-if="isPhotoTaken"
                     class="mdi mdi-trash-can"
@@ -291,6 +303,9 @@ export default {
       countdown: 0,
       isAutoShooting: false,
       flash: false,
+
+      isMirror:false,
+
     };
   },
 
@@ -385,11 +400,25 @@ export default {
 
       const context = this.$refs.canvas.getContext("2d");
 
-      if (this.rows <= this.columns) {
+    if (this.rows <= this.columns) {
+      if (this.isMirror) {
+        context.save();
+        context.scale(-1, 1);
+        context.drawImage(this.$refs.camera, -600, 0, 600, 450);
+        context.restore();
+      } else {
         context.drawImage(this.$refs.camera, 0, 0, 600, 450);
+      }
+    } else {
+      if (this.isMirror) {
+        context.save();
+        context.scale(-1, 1);
+        context.drawImage(this.$refs.camera, -450, 0, 450, 600);
+        context.restore();
       } else {
         context.drawImage(this.$refs.camera, 0, 0, 450, 600);
       }
+    }
       this.flash = true;
       setTimeout(() => {
         this.flash = false;
@@ -587,6 +616,10 @@ video {
   opacity: 0.9;
   pointer-events: none;
   animation: flashAnim 0.15s ease;
+}
+
+.mirror {
+  transform: scaleX(-1);
 }
 
 @keyframes flashAnim {
