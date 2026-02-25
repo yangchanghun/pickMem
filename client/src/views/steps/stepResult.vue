@@ -2,7 +2,6 @@
   <div class="step-result">
     <div class="text-center mb-3">
       <button class="btn-custom mr-3" @click="saveResult">저 장 하 기</button>
-      <button class="btn-custom ml-3" @click="printResult">인 쇄 하 기</button>
       <button class="btn-custom" @click="$router.push('/')">다 시 하 기</button>
     </div>
     <div class="mb-5">
@@ -38,10 +37,6 @@ export default {
     this.columns = table.columns;
   },
   methods: {
-    async printResult() {
-      window.print();
-    },
-
     async saveResult() {
       try {
         console.log("saveResult clicked");
