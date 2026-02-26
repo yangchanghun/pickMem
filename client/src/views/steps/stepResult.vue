@@ -41,8 +41,17 @@ export default {
     async printClick() {
       console.log("printClick clicked");
 
+      const canvas = await html2canvas(this.$refs.result, {
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#ffffff",
+        scale: 2,
+      });
+
+      const base64 = canvas.toDataURL("image/png");
+
       if (window.AndroidBridge && window.AndroidBridge.printPage) {
-        window.AndroidBridge.printPage();
+        window.AndroidBridge.printImage(base64);
       } else {
         window.print(); // 일반 브라우저용
       }
