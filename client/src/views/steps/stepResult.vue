@@ -50,7 +50,7 @@ export default {
 
       const base64 = canvas.toDataURL("image/png");
 
-      if (window.AndroidBridge && window.AndroidBridge.printPage) {
+      if (window.AndroidBridge && window.AndroidBridge.printImage) {
         window.AndroidBridge.printImage(base64);
       } else {
         window.print(); // 일반 브라우저용
