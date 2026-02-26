@@ -39,13 +39,12 @@ export default {
   },
   methods: {
     async printClick() {
-      try {
-        console.log("printClick clicked");
-        await this.$nextTick(); // DOM 업데이트 대기
-        window.print();
-      } catch (error) {
-        console.error("printClick error:", error);
-        alert("인쇄 중 오류가 발생했습니다.");
+      console.log("printClick clicked");
+
+      if (window.AndroidBridge && window.AndroidBridge.printPage) {
+        window.AndroidBridge.printPage();
+      } else {
+        window.print(); // 일반 브라우저용
       }
     },
 
