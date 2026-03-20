@@ -34,7 +34,7 @@
               width="600"
               height="450"
               autoplay
-              :class="{mirror:isMirror}"
+              :class="{ mirror: isMirror }"
             ></video>
             <canvas
               v-show="isPhotoTaken"
@@ -57,7 +57,7 @@
               >
                 <i
                   class="mdi mdi-swap-horizontal"
-                  style="font-size: 28px; color: #fff; cursor: pointer;"
+                  style="font-size: 28px; color: #fff; cursor: pointer"
                   @click="isMirror = !isMirror"
                 ></i>
                 <i
@@ -144,6 +144,7 @@
             </div>
             <div v-if="flash" class="flash"></div>
             <audio ref="shutterSound" src="/sounds/shutter.mp3"></audio>
+          </div>
           <div v-if="!isShotPhoto">
             <div class="d-flex justify-content-center align-items-center">
               <div class="row m-0 p-0 w-100" style="height: 100px">
@@ -192,11 +193,11 @@
                 <div
                   class="col-2 d-flex align-items-center justify-content-center"
                 >
-                 <i
-                  class="mdi mdi-swap-horizontal"
-                  style="font-size: 28px; color: #fff; cursor: pointer;"
-                  @click="isMirror = !isMirror"
-                ></i>
+                  <i
+                    class="mdi mdi-swap-horizontal"
+                    style="font-size: 28px; color: #fff; cursor: pointer"
+                    @click="isMirror = !isMirror"
+                  ></i>
                   <i
                     v-if="isPhotoTaken"
                     class="mdi mdi-trash-can"
@@ -304,8 +305,7 @@ export default {
       isAutoShooting: false,
       flash: false,
 
-      isMirror:false,
-
+      isMirror: false,
     };
   },
 
@@ -345,9 +345,14 @@ export default {
           this.canPhoto = true;
 
           this.$nextTick(() => {
-            if (this.$refs.camera) {
-              this.$refs.camera.srcObject = stream;
-            }
+            const video = this.$refs.camera;
+            if (!video) return;
+            video.srcObject = stream;
+
+            video.onloademetadata = () => {
+              video.play();
+              console.log("카메라 준비됨", video.videoWidth, video.videoHeight);
+            };
           });
         })
         .catch((error) => {
@@ -404,50 +409,48 @@ export default {
       }, 1000);
     },
 
-  captureAndSave() {
-    const video = this.$refs.camera;
-    const canvas = this.$refs.canvas;
+    captureAndSave() {
+      if (!this.$refs.canvas || !this.$refs.camera) return;
 
-    if (!video || !canvas) return;
+      const context = this.$refs.canvas.getContext("2d");
 
-    const context = canvas.getContext("2d");
+      if (this.rows <= this.columns) {
+        if (this.isMirror) {
+          context.save();
+          context.scale(-1, 1);
+          context.drawImage(this.$refs.camera, -600, 0, 600, 450);
+          context.restore();
+        } else {
+          context.drawImage(this.$refs.camera, 0, 0, 600, 450);
+        }
+      } else {
+        if (this.isMirror) {
+          context.save();
+          context.scale(-1, 1);
+          context.drawImage(this.$refs.camera, -450, 0, 450, 600);
+          context.restore();
+        } else {
+          context.drawImage(this.$refs.camera, 0, 0, 450, 600);
+        }
+      }
+      this.flash = true;
+      setTimeout(() => {
+        this.flash = false;
+      }, 150);
 
-    // 🔥 핵심: 실제 카메라 해상도 사용
-    const width = video.videoWidth;
-    const height = video.videoHeight;
+      /* 🔊 셔터 사운드 */
+      if (this.$refs.shutterSound) {
+        this.$refs.shutterSound.currentTime = 0;
+        this.$refs.shutterSound.play();
+      }
 
-    // 🔥 캔버스도 맞춰줘야 함
-    canvas.width = width;
-    canvas.height = height;
+      const image = this.$refs.canvas
+        .toDataURL("image/jpeg")
+        .replace("image/jpeg", "image/octet-stream");
 
-    if (this.isMirror) {
-      context.save();
-      context.scale(-1, 1);
-      context.drawImage(video, -width, 0, width, height);
-      context.restore();
-    } else {
-      context.drawImage(video, 0, 0, width, height);
-    }
-
-    // 플래시 효과
-    this.flash = true;
-    setTimeout(() => {
-      this.flash = false;
-    }, 150);
-
-    // 셔터 사운드
-    if (this.$refs.shutterSound) {
-      this.$refs.shutterSound.currentTime = 0;
-      this.$refs.shutterSound.play();
-    }
-
-    const image = canvas
-      .toDataURL("image/jpeg")
-      .replace("image/jpeg", "image/octet-stream");
-
-    let id = Date.now();
-    this.$set(this.images, id, image);
-  },
+      let id = Date.now();
+      this.$set(this.images, id, image);
+    },
 
     stopAllShooting() {
       this.isAutoShooting = false;
@@ -587,8 +590,6 @@ export default {
 
 canvas,
 video {
-  width: 100%;
-  height: 100%;
   object-fit: cover;
 }
 .countdown-overlay {
