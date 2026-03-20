@@ -404,48 +404,50 @@ export default {
       }, 1000);
     },
 
-    captureAndSave() {
-      if (!this.$refs.canvas || !this.$refs.camera) return;
+  captureAndSave() {
+    const video = this.$refs.camera;
+    const canvas = this.$refs.canvas;
 
-      const context = this.$refs.canvas.getContext("2d");
+    if (!video || !canvas) return;
 
-    if (this.rows <= this.columns) {
-      if (this.isMirror) {
-        context.save();
-        context.scale(-1, 1);
-        context.drawImage(this.$refs.camera, -600, 0, 600, 450);
-        context.restore();
-      } else {
-        context.drawImage(this.$refs.camera, 0, 0, 600, 450);
-      }
+    const context = canvas.getContext("2d");
+
+    // 🔥 핵심: 실제 카메라 해상도 사용
+    const width = video.videoWidth;
+    const height = video.videoHeight;
+
+    // 🔥 캔버스도 맞춰줘야 함
+    canvas.width = width;
+    canvas.height = height;
+
+    if (this.isMirror) {
+      context.save();
+      context.scale(-1, 1);
+      context.drawImage(video, -width, 0, width, height);
+      context.restore();
     } else {
-      if (this.isMirror) {
-        context.save();
-        context.scale(-1, 1);
-        context.drawImage(this.$refs.camera, -450, 0, 450, 600);
-        context.restore();
-      } else {
-        context.drawImage(this.$refs.camera, 0, 0, 450, 600);
-      }
+      context.drawImage(video, 0, 0, width, height);
     }
-      this.flash = true;
-      setTimeout(() => {
-        this.flash = false;
-      }, 150);
 
-      /* 🔊 셔터 사운드 */
-      if (this.$refs.shutterSound) {
-        this.$refs.shutterSound.currentTime = 0;
-        this.$refs.shutterSound.play();
-      }
+    // 플래시 효과
+    this.flash = true;
+    setTimeout(() => {
+      this.flash = false;
+    }, 150);
 
-      const image = this.$refs.canvas
-        .toDataURL("image/jpeg")
-        .replace("image/jpeg", "image/octet-stream");
+    // 셔터 사운드
+    if (this.$refs.shutterSound) {
+      this.$refs.shutterSound.currentTime = 0;
+      this.$refs.shutterSound.play();
+    }
 
-      let id = Date.now();
-      this.$set(this.images, id, image);
-    },
+    const image = canvas
+      .toDataURL("image/jpeg")
+      .replace("image/jpeg", "image/octet-stream");
+
+    let id = Date.now();
+    this.$set(this.images, id, image);
+  },
 
     stopAllShooting() {
       this.isAutoShooting = false;
@@ -585,6 +587,8 @@ export default {
 
 canvas,
 video {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 .countdown-overlay {
