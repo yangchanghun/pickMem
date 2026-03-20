@@ -347,11 +347,16 @@ export default {
           this.$nextTick(() => {
             const video = this.$refs.camera;
             if (!video) return;
+
             video.srcObject = stream;
 
-            video.onloademetadata = () => {
-              video.play();
-              console.log("카메라 준비됨", video.videoWidth, video.videoHeight);
+            video.muted = true;
+            video.setAttribute("playsinline", true);
+
+            video.onloadedmetadata = () => {
+              video.play().catch((e) => {
+                console.log("play 실패", e);
+              });
             };
           });
         })
