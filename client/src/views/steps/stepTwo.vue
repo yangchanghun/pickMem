@@ -341,17 +341,7 @@ export default {
     },
 
     async createCameraElement() {
-      if (this.isCameraStarting) return;
-
-      this.isCameraStarting = true;
       this.isLoading = true;
-
-      // 기존 스트림 제거
-      const video = this.$refs.camera;
-      if (video && video.srcObject) {
-        video.srcObject.getTracks().forEach((track) => track.stop());
-        video.srcObject = null;
-      }
 
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -365,8 +355,7 @@ export default {
 
           video.srcObject = stream;
           video.muted = true;
-          video.setAttribute("playsinline", "true");
-          video.autoplay = true;
+          video.playsInline = true;
 
           video.onloadedmetadata = () => {
             video.play().catch(() => {});
@@ -374,15 +363,13 @@ export default {
         });
 
         this.canPhoto = true;
-      } catch (error) {
-        console.error("카메라 실패:", error);
+      } catch (e) {
+        console.error(e);
         this.canPhoto = false;
       }
 
       this.isLoading = false;
-      this.isCameraStarting = false;
     },
-
     /* ================= 카운트다운 ================= */
 
     startCountdown() {
