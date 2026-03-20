@@ -326,9 +326,17 @@ export default {
 
   methods: {
     /* ================= 카메라 생성 ================= */
-
     createCameraElement() {
       this.isLoading = true;
+
+      // 🔥 핵심 1: mediaDevices 체크
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.log("카메라 지원 안됨");
+
+        this.isLoading = false;
+        this.canPhoto = false;
+        return;
+      }
 
       navigator.mediaDevices
         .getUserMedia({ video: true, audio: false })
@@ -336,7 +344,6 @@ export default {
           this.isLoading = false;
           this.canPhoto = true;
 
-          // 🔥 DOM 렌더 후 ref 접근
           this.$nextTick(() => {
             if (this.$refs.camera) {
               this.$refs.camera.srcObject = stream;
@@ -344,7 +351,9 @@ export default {
           });
         })
         .catch((error) => {
-          console.error(error);
+          console.error("카메라 실패:", error);
+
+          // 🔥 핵심 2: 무조건 fallback
           this.isLoading = false;
           this.canPhoto = false;
         });
