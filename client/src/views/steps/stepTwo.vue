@@ -341,56 +341,23 @@ export default {
     },
 
     async createCameraElement() {
-      if (this.isCameraStarting) {
-        console.log("이미 실행 중");
-        return;
-      }
+      if (this.isCameraStarting) return;
 
       this.isCameraStarting = true;
       this.isLoading = true;
 
-      // 🔥 기존 스트림 완전 제거
+      // 기존 스트림 제거
       const video = this.$refs.camera;
       if (video && video.srcObject) {
         video.srcObject.getTracks().forEach((track) => track.stop());
         video.srcObject = null;
       }
 
-      // 🔥 토큰 (중첩 방지 핵심)
-      this.currentCameraToken = Date.now();
-      const token = this.currentCameraToken;
-
       try {
-        await navigator.mediaDevices.getUserMedia({ video: true });
-        const devices = await navigator.mediaDevices.enumerateDevices();
-        const cameras = devices.filter((d) => d.kind === "videoinput");
-
-        console.log("카메라 목록:", cameras);
-
-        let selectedCamera = cameras.find(
-          (c) =>
-            c.label.toLowerCase().includes("usb") ||
-            c.label.toLowerCase().includes("camera"),
-        );
-
-        if (!selectedCamera) {
-          selectedCamera = cameras[cameras.length - 1];
-        }
-
         const stream = await navigator.mediaDevices.getUserMedia({
-          video: {
-            deviceId: selectedCamera?.deviceId,
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
-          },
+          video: true,
           audio: false,
         });
-
-        // 🔥 이전 요청이면 무시
-        if (token !== this.currentCameraToken) {
-          stream.getTracks().forEach((track) => track.stop());
-          return;
-        }
 
         this.$nextTick(() => {
           const video = this.$refs.camera;
@@ -399,9 +366,10 @@ export default {
           video.srcObject = stream;
           video.muted = true;
           video.setAttribute("playsinline", "true");
+          video.autoplay = true;
 
           video.onloadedmetadata = () => {
-            video.play().catch((e) => console.log("play 실패", e));
+            video.play().catch(() => {});
           };
         });
 
