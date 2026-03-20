@@ -326,44 +326,45 @@ export default {
 
   methods: {
     /* ================= 카메라 생성 ================= */
+    // methods 내 createCameraElement 수정
     createCameraElement() {
       this.isLoading = true;
 
-      // 🔥 핵심 1: mediaDevices 체크
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        console.log("카메라 지원 안됨");
+      // 기존 스트림 정리 (안전장치)
+      this.stopCameraStream();
 
-        this.isLoading = false;
-        this.canPhoto = false;
-        return;
-      }
+      const constraints = {
+        video: {
+          width: { ideal: 1280 }, // 키오스크라면 고해상도 설정 권장
+          height: { ideal: 720 },
+          facingMode: "user",
+        },
+        audio: false,
+      };
 
       navigator.mediaDevices
-        .getUserMedia({ video: true, audio: false })
+        .getUserMedia(constraints)
         .then((stream) => {
           this.isLoading = false;
           this.canPhoto = true;
 
           this.$nextTick(() => {
+            // ref가 배열로 잡힐 수 있으니(v-for 등 사용 시) 확인 필요
             const video = this.$refs.camera;
             if (!video) return;
 
             video.srcObject = stream;
-
+            // 중요: playsinline과 muted는 스크립트로 한 번 더 강제
+            video.setAttribute("playsinline", "true");
             video.muted = true;
-            video.setAttribute("playsinline", true);
 
             video.onloadedmetadata = () => {
-              video.play().catch((e) => {
-                console.log("play 실패", e);
-              });
+              video.play().catch((e) => console.error("Auto-play failed:", e));
             };
           });
         })
         .catch((error) => {
-          console.error("카메라 실패:", error);
-
-          // 🔥 핵심 2: 무조건 fallback
+          console.error("Camera access error:", error);
           this.isLoading = false;
           this.canPhoto = false;
         });
