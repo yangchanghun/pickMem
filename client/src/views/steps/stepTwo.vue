@@ -361,6 +361,7 @@ export default {
       const token = this.currentCameraToken;
 
       try {
+        await navigator.mediaDevices.getUserMedia({ video: true });
         const devices = await navigator.mediaDevices.enumerateDevices();
         const cameras = devices.filter((d) => d.kind === "videoinput");
 
