@@ -327,47 +327,89 @@ export default {
   methods: {
     /* ================= 카메라 생성 ================= */
     // methods 내 createCameraElement 수정
-    createCameraElement() {
-      this.isLoading = true;
 
-      // 기존 스트림 정리 (안전장치)
+    async getCameraDevices() {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+
+      const cameras = devices.filter((d) => d.kind === "videoinput");
+
+      console.log("카메라 목록", cameras);
+
+      return cameras;
+    },
+
+    async createCameraElement() {
+      this.isLoading = true;
       this.stopCameraStream();
 
-      const constraints = {
-        video: {
-          width: { ideal: 1280 }, // 키오스크라면 고해상도 설정 권장
-          height: { ideal: 720 },
-          facingMode: "user",
-        },
-        audio: false,
-      };
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cameras = devices.filter((d) => d.kind === "videoinput");
 
-      navigator.mediaDevices
-        .getUserMedia(constraints)
-        .then((stream) => {
+        console.log("카메라 목록:", cameras);
+
+        // 🔥 1순위: USB / 외장 카메라
+        let selectedCamera = cameras.find(
+          (c) =>
+            c.label.toLowerCase().includes("usb") ||
+            c.label.toLowerCase().includes("camera"),
+        );
+
+        // 🔥 없으면 마지막
+        if (!selectedCamera) {
+          selectedCamera = cameras[cameras.length - 1];
+        }
+
+        console.log("선택된 카메라:", selectedCamera);
+
+        const constraints = {
+          video: {
+            deviceId: selectedCamera.deviceId,
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+        this.isLoading = false;
+        this.canPhoto = true;
+
+        this.$nextTick(() => {
+          const video = this.$refs.camera;
+          if (!video) return;
+
+          video.srcObject = stream;
+          video.muted = true;
+          video.setAttribute("playsinline", "true");
+
+          video.onloadedmetadata = () => {
+            video.play().catch((e) => console.log("play 실패", e));
+          };
+        });
+      } catch (error) {
+        console.error("카메라 실패:", error);
+
+        // 🔥 fallback (아무거나라도)
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+          });
+
+          const video = this.$refs.camera;
+          if (video) {
+            video.srcObject = stream;
+            video.play();
+          }
+
           this.isLoading = false;
           this.canPhoto = true;
-
-          this.$nextTick(() => {
-            // ref가 배열로 잡힐 수 있으니(v-for 등 사용 시) 확인 필요
-            const video = this.$refs.camera;
-            if (!video) return;
-
-            video.srcObject = stream;
-            // 중요: playsinline과 muted는 스크립트로 한 번 더 강제
-            video.setAttribute("playsinline", "true");
-            video.muted = true;
-
-            video.onloadedmetadata = () => {
-              video.play().catch((e) => console.error("Auto-play failed:", e));
-            };
-          });
-        })
-        .catch((error) => {
-          console.error("Camera access error:", error);
+        } catch (e) {
           this.isLoading = false;
           this.canPhoto = false;
-        });
+        }
+      }
     },
 
     /* ================= 카운트다운 ================= */
