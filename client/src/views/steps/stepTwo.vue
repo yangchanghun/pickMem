@@ -306,6 +306,8 @@ export default {
       flash: false,
 
       isMirror: false,
+      isCameraStarting: false, // 🔥 추가
+      currentCameraToken: null, // 🔥 추가
     };
   },
 
@@ -339,8 +341,24 @@ export default {
     },
 
     async createCameraElement() {
+      if (this.isCameraStarting) {
+        console.log("이미 실행 중");
+        return;
+      }
+
+      this.isCameraStarting = true;
       this.isLoading = true;
-      this.stopCameraStream();
+
+      // 🔥 기존 스트림 완전 제거
+      const video = this.$refs.camera;
+      if (video && video.srcObject) {
+        video.srcObject.getTracks().forEach((track) => track.stop());
+        video.srcObject = null;
+      }
+
+      // 🔥 토큰 (중첩 방지 핵심)
+      this.currentCameraToken = Date.now();
+      const token = this.currentCameraToken;
 
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
@@ -348,33 +366,30 @@ export default {
 
         console.log("카메라 목록:", cameras);
 
-        // 🔥 1순위: USB / 외장 카메라
         let selectedCamera = cameras.find(
           (c) =>
             c.label.toLowerCase().includes("usb") ||
             c.label.toLowerCase().includes("camera"),
         );
 
-        // 🔥 없으면 마지막
         if (!selectedCamera) {
           selectedCamera = cameras[cameras.length - 1];
         }
 
-        console.log("선택된 카메라:", selectedCamera);
-
-        const constraints = {
+        const stream = await navigator.mediaDevices.getUserMedia({
           video: {
-            deviceId: selectedCamera.deviceId,
+            deviceId: selectedCamera?.deviceId,
             width: { ideal: 1280 },
             height: { ideal: 720 },
           },
           audio: false,
-        };
+        });
 
-        const stream = await navigator.mediaDevices.getUserMedia(constraints);
-
-        this.isLoading = false;
-        this.canPhoto = true;
+        // 🔥 이전 요청이면 무시
+        if (token !== this.currentCameraToken) {
+          stream.getTracks().forEach((track) => track.stop());
+          return;
+        }
 
         this.$nextTick(() => {
           const video = this.$refs.camera;
@@ -388,28 +403,15 @@ export default {
             video.play().catch((e) => console.log("play 실패", e));
           };
         });
+
+        this.canPhoto = true;
       } catch (error) {
         console.error("카메라 실패:", error);
-
-        // 🔥 fallback (아무거나라도)
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
-          });
-
-          const video = this.$refs.camera;
-          if (video) {
-            video.srcObject = stream;
-            video.play();
-          }
-
-          this.isLoading = false;
-          this.canPhoto = true;
-        } catch (e) {
-          this.isLoading = false;
-          this.canPhoto = false;
-        }
+        this.canPhoto = false;
       }
+
+      this.isLoading = false;
+      this.isCameraStarting = false;
     },
 
     /* ================= 카운트다운 ================= */
