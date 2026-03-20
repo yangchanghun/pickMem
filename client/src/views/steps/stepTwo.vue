@@ -306,8 +306,6 @@ export default {
       flash: false,
 
       isMirror: false,
-      isCameraStarting: false, // 🔥 추가
-      currentCameraToken: null, // 🔥 추가
     };
   },
 
@@ -342,12 +340,41 @@ export default {
 
     async createCameraElement() {
       this.isLoading = true;
+      this.stopCameraStream();
 
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: true,
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const cameras = devices.filter((d) => d.kind === "videoinput");
+
+        console.log("카메라 목록:", cameras);
+
+        // 🔥 1순위: USB / 외장 카메라
+        let selectedCamera = cameras.find(
+          (c) =>
+            c.label.toLowerCase().includes("usb") ||
+            c.label.toLowerCase().includes("camera"),
+        );
+
+        // 🔥 없으면 마지막
+        if (!selectedCamera) {
+          selectedCamera = cameras[cameras.length - 1];
+        }
+
+        console.log("선택된 카메라:", selectedCamera);
+
+        const constraints = {
+          video: {
+            deviceId: selectedCamera.deviceId,
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
           audio: false,
-        });
+        };
+
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+
+        this.isLoading = false;
+        this.canPhoto = true;
 
         this.$nextTick(() => {
           const video = this.$refs.camera;
@@ -355,21 +382,36 @@ export default {
 
           video.srcObject = stream;
           video.muted = true;
-          video.playsInline = true;
+          video.setAttribute("playsinline", "true");
 
           video.onloadedmetadata = () => {
-            video.play().catch(() => {});
+            video.play().catch((e) => console.log("play 실패", e));
           };
         });
+      } catch (error) {
+        console.error("카메라 실패:", error);
 
-        this.canPhoto = true;
-      } catch (e) {
-        console.error(e);
-        this.canPhoto = false;
+        // 🔥 fallback (아무거나라도)
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+          });
+
+          const video = this.$refs.camera;
+          if (video) {
+            video.srcObject = stream;
+            video.play();
+          }
+
+          this.isLoading = false;
+          this.canPhoto = true;
+        } catch (e) {
+          this.isLoading = false;
+          this.canPhoto = false;
+        }
       }
-
-      this.isLoading = false;
     },
+
     /* ================= 카운트다운 ================= */
 
     startCountdown() {
